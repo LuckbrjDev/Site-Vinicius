@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vinicius Express</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div id="ageGate" class="age-gate">
+      <div class="age-panel">
+        <p class="eyebrow">Acesso restrito</p>
+        <h1>Vinicius Express</h1>
+        <p>Esta loja comercializa bebidas e produtos de tabacaria. Confirme que voce tem 18 anos ou mais para continuar.</p>
+        <div class="age-actions">
+          <button id="confirmAgeBtn" class="btn primary">Tenho 18 anos ou mais</button>
+          <button id="leaveBtn" class="btn ghost">Sair</button>
+        </div>
+      </div>
+    </div>
+
+    <header class="topbar">
+      <a href="#home" class="brand" data-route="home">
+        <span class="brand-mark">VE</span>
+        <span data-store-name>Vinicius Express</span>
+      </a>
+      <nav class="main-nav" aria-label="Navegacao principal">
+        <button class="nav-link active" data-route="home">Inicio</button>
+        <button class="nav-link" data-route="shop">Comprar</button>
+        <button class="nav-link" data-route="cart">Cesta <span data-cart-count>0</span></button>
+        <button class="nav-link" data-route="admin">Admin</button>
+      </nav>
+    </header>
+
+    <main>
+      <section id="homeView" class="view active">
+        <div class="hero">
+          <div class="hero-copy">
+            <p class="eyebrow">Conveniência online</p>
+            <h1 data-store-name>Vinicius Express</h1>
+            <p>Bebidas, tabacaria, essências e itens de conveniência em uma compra rápida, organizada por categorias, com entrega ou retirada.</p>
+            <div class="hero-badges">
+              <span class="hero-badge">Entrega e retirada</span>
+              <span class="hero-badge">Produtos +18</span>
+              <span class="hero-badge">PIX e cartao</span>
+            </div>
+            <div class="hero-actions">
+              <button class="btn primary" data-route="shop">Comprar agora</button>
+              <button class="btn secondary" data-route="cart">Ver cesta</button>
+            </div>
+          </div>
+          <div class="hero-media" aria-label="Produtos de conveniencia">
+            <div class="shelf-card tall">
+              <span>Bebidas</span>
+              <strong>Geladas</strong>
+            </div>
+            <div class="shelf-card">
+              <span>Tabacaria</span>
+              <strong>Essências</strong>
+            </div>
+            <div class="shelf-card dark">
+              <span>Express</span>
+              <strong>Retirada</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="store-strip">
+          <div>
+            <strong>Compra express</strong>
+            <span>Cesta, checkout e pagamento simulado em poucos passos</span>
+          </div>
+          <div>
+            <strong>Estoque visivel</strong>
+            <span>Produtos organizados por categoria e disponibilidade</span>
+          </div>
+          <div>
+            <strong>Retirada ou entrega</strong>
+            <span>Cliente escolhe como quer receber no checkout</span>
+          </div>
+        </div>
+
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Destaques</p>
+            <h2>Mais pedidos</h2>
+          </div>
+          <button class="btn slim" data-route="shop">Abrir catalogo</button>
+        </div>
+        <div id="featuredGrid" class="product-grid"></div>
+      </section>
+
+      <section id="shopView" class="view">
+        <div class="shop-layout">
+          <aside class="filters">
+            <div class="panel-title">Categorias</div>
+            <div id="categoryFilters" class="filter-list"></div>
+          </aside>
+          <div class="shop-content">
+            <div class="shop-toolbar">
+              <div>
+                <p class="eyebrow">Balcão online</p>
+                <h1>Produtos para comprar agora</h1>
+              </div>
+              <input id="searchInput" class="input" type="search" placeholder="Buscar produto" />
+            </div>
+            <div id="productGrid" class="product-grid"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="cartView" class="view">
+        <div class="cart-layout">
+          <div>
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Cesta</p>
+                <h1>Sua compra</h1>
+              </div>
+              <button class="btn slim" data-route="shop">Adicionar itens</button>
+            </div>
+            <div id="cartItems" class="cart-list"></div>
+          </div>
+          <aside class="summary-box">
+            <h2>Resumo</h2>
+            <div class="summary-row"><span>Produtos</span><strong data-cart-subtotal>R$ 0,00</strong></div>
+            <div class="summary-row"><span>Entrega</span><strong data-delivery-fee>R$ 0,00</strong></div>
+            <div class="summary-row total"><span>Total</span><strong data-cart-total>R$ 0,00</strong></div>
+            <button id="goCheckoutBtn" class="btn primary full">Finalizar compra</button>
+          </aside>
+        </div>
+      </section>
+
+      <section id="checkoutView" class="view">
+        <div class="checkout-grid">
+          <form id="checkoutForm" class="form-panel">
+            <div class="section-head compact">
+              <div>
+                <p class="eyebrow">Checkout</p>
+                <h1>Dados do pedido</h1>
+              </div>
+            </div>
+
+            <div class="form-grid">
+              <label>Nome completo<input class="input" name="name" required /></label>
+              <label>CPF<input class="input" name="cpf" required maxlength="14" /></label>
+              <label>WhatsApp<input class="input" name="phone" required /></label>
+              <label>Email<input class="input" name="email" type="email" /></label>
+            </div>
+
+            <div class="segmented">
+              <label><input type="radio" name="fulfillment" value="delivery" checked /> Entrega</label>
+              <label><input type="radio" name="fulfillment" value="pickup" /> Retirada</label>
+            </div>
+
+            <div id="deliveryFields" class="delivery-fields">
+              <div class="cep-row">
+                <label>CEP<input id="cepInput" class="input" name="cep" inputmode="numeric" /></label>
+                <button type="button" id="lookupCepBtn" class="btn secondary">Consultar CEP</button>
+              </div>
+              <p id="cepMessage" class="form-message"></p>
+              <div class="form-grid">
+                <label>Rua<input class="input" name="street" /></label>
+                <label>Numero<input class="input" name="number" /></label>
+                <label>Complemento<input class="input" name="complement" /></label>
+                <label>Bairro<input class="input" name="district" /></label>
+                <label>Cidade<input class="input" name="city" /></label>
+                <label>Estado<input class="input" name="state" maxlength="2" /></label>
+              </div>
+              <label>Referencia<input class="input" name="reference" /></label>
+            </div>
+
+            <label class="check-line"><input name="adultConfirm" type="checkbox" required /> Confirmo que sou maior de 18 anos e apresentarei documento se solicitado.</label>
+
+            <div class="payment-box">
+              <h2>Pagamento simulado</h2>
+              <div class="segmented">
+                <label><input type="radio" name="paymentMethod" value="pix" checked /> PIX</label>
+                <label><input type="radio" name="paymentMethod" value="card" /> Cartao</label>
+              </div>
+              <div id="pixSim" class="payment-sim active">
+                <div class="fake-qr">PIX</div>
+                <code id="pixCode">VE-PIX-000000</code>
+                <button type="button" id="approvePixBtn" class="btn secondary">Simular PIX pago</button>
+              </div>
+              <div id="cardSim" class="payment-sim">
+                <div class="form-grid">
+                  <label>Numero do cartao<input class="input" name="cardNumber" placeholder="0000 0000 0000 0000" /></label>
+                  <label>Nome no cartao<input class="input" name="cardName" /></label>
+                  <label>Validade<input class="input" name="cardExpiry" placeholder="MM/AA" /></label>
+                  <label>CVV<input class="input" name="cardCvv" maxlength="4" /></label>
+                </div>
+              </div>
+            </div>
+
+            <button class="btn primary full" type="submit">Confirmar pedido</button>
+          </form>
+          <aside class="summary-box">
+            <h2>Resumo final</h2>
+            <div id="checkoutSummary"></div>
+          </aside>
+        </div>
+      </section>
+
+      <section id="successView" class="view">
+        <div class="success-panel">
+          <p class="eyebrow">Pedido confirmado</p>
+          <h1 id="successTitle">Venda registrada</h1>
+          <div id="successDetails"></div>
+          <div class="hero-actions">
+            <button class="btn primary" data-route="shop">Nova compra</button>
+            <button id="copyOrderBtn" class="btn secondary">Copiar resumo</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="adminView" class="view">
+        <div id="adminLogin" class="login-panel">
+          <p class="eyebrow">Painel admin</p>
+          <h1>Acesso administrativo</h1>
+          <form id="adminLoginForm" class="login-form">
+            <input class="input" name="password" type="password" placeholder="Senha admin" required />
+            <button class="btn primary" type="submit">Entrar</button>
+          </form>
+          <p class="hint">Senha inicial: admin123</p>
+        </div>
+
+        <div id="adminApp" class="admin-shell hidden">
+          <aside class="admin-sidebar">
+            <div class="brand small"><span class="brand-mark">VE</span><span data-store-name>Vinicius Express</span></div>
+            <button class="admin-tab active" data-admin-tab="dashboard">Dashboard</button>
+            <button class="admin-tab" data-admin-tab="products">Produtos</button>
+            <button class="admin-tab" data-admin-tab="categories">Categorias</button>
+            <button class="admin-tab" data-admin-tab="orders">Vendas</button>
+            <button class="admin-tab" data-admin-tab="stock">Estoque</button>
+            <button class="admin-tab" data-admin-tab="finance">Financeiro</button>
+            <button class="admin-tab" data-admin-tab="settings">Configuracoes</button>
+            <button id="logoutBtn" class="admin-tab muted">Sair</button>
+          </aside>
+          <div class="admin-content">
+            <section id="dashboardTab" class="admin-panel active"></section>
+            <section id="productsTab" class="admin-panel"></section>
+            <section id="categoriesTab" class="admin-panel"></section>
+            <section id="ordersTab" class="admin-panel"></section>
+            <section id="stockTab" class="admin-panel"></section>
+            <section id="financeTab" class="admin-panel"></section>
+            <section id="settingsTab" class="admin-panel"></section>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <div id="toast" class="toast"></div>
+    <script src="app.js"></script>
+  </body>
+</html>
