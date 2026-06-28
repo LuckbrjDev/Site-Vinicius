@@ -9,6 +9,7 @@
   <body>
     <div id="ageGate" class="age-gate">
       <div class="age-panel">
+        <img class="age-logo" src="Logo.png" alt="Omega Software" />
         <p class="eyebrow">Acesso restrito</p>
         <h1>Vinicius Express</h1>
         <p>Esta loja comercializa bebidas e produtos de tabacaria. Confirme que voce tem 18 anos ou mais para continuar.</p>
@@ -21,7 +22,7 @@
 
     <header class="topbar">
       <a href="#home" class="brand" data-route="home">
-        <span class="brand-mark">VE</span>
+        <span class="brand-mark"><img src="Logo.png" alt="Omega Software" /></span>
         <span data-store-name>Vinicius Express</span>
       </a>
       <nav class="main-nav" aria-label="Navegacao principal">
@@ -36,6 +37,7 @@
       <section id="homeView" class="view active">
         <div class="hero">
           <div class="hero-copy">
+            <img class="hero-logo" src="Logo.png" alt="Omega Software" />
             <p class="eyebrow">Conveniência online</p>
             <h1 data-store-name>Vinicius Express</h1>
             <p>Bebidas, tabacaria, essências e itens de conveniência em uma compra rápida, organizada por categorias, com entrega ou retirada.</p>
@@ -44,10 +46,11 @@
               <span class="hero-badge">Produtos +18</span>
               <span class="hero-badge">PIX e cartao</span>
             </div>
-            <div class="hero-actions">
-              <button class="btn primary" data-route="shop">Comprar agora</button>
-              <button class="btn secondary" data-route="cart">Ver cesta</button>
-            </div>
+          <div class="hero-actions">
+            <button class="btn primary" data-route="shop">Comprar agora</button>
+            <button class="btn secondary" data-route="cart">Ver cesta</button>
+          </div>
+          <div class="commercial-note">Operação com confirmação +18, checkout organizado e pedido pronto para envio ao atendimento.</div>
           </div>
           <div class="hero-media" aria-label="Produtos de conveniencia">
             <div class="shelf-card tall">
@@ -210,6 +213,7 @@
           <div class="hero-actions">
             <button class="btn primary" data-route="shop">Nova compra</button>
             <button id="copyOrderBtn" class="btn secondary">Copiar resumo</button>
+            <button id="sendWhatsappBtn" class="btn secondary hidden">Enviar no WhatsApp</button>
           </div>
         </div>
       </section>
@@ -227,7 +231,7 @@
 
         <div id="adminApp" class="admin-shell hidden">
           <aside class="admin-sidebar">
-            <div class="brand small"><span class="brand-mark">VE</span><span data-store-name>Vinicius Express</span></div>
+            <div class="brand small"><span class="brand-mark"><img src="Logo.png" alt="Omega Software" /></span><span data-store-name>Vinicius Express</span></div>
             <button class="admin-tab active" data-admin-tab="dashboard">Dashboard</button>
             <button class="admin-tab" data-admin-tab="products">Produtos</button>
             <button class="admin-tab" data-admin-tab="categories">Categorias</button>
@@ -250,6 +254,12 @@
       </section>
     </main>
 
+    <footer class="site-footer">
+      <img class="footer-logo" src="Logo.png" alt="Omega Software" />
+      <p class="copyright">© 2026 Omega Software. Todos os direitos reservados.</p>
+    </footer>
+
+    <a id="floatingWhatsapp" class="floating-whatsapp hidden" target="_blank" rel="noopener">WhatsApp</a>
     <div id="toast" class="toast"></div>
     <script src="app.js"></script>
   </body>

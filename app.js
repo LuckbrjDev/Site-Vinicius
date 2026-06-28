@@ -160,6 +160,7 @@ function render() {
   document.querySelectorAll("[data-store-name]").forEach((el) => (el.textContent = state.settings.storeName));
   document.querySelectorAll("[data-cart-count]").forEach((el) => (el.textContent = state.cart.reduce((sum, item) => sum + item.quantity, 0)));
   document.getElementById("ageGate").classList.toggle("hidden", state.session.adultConfirmed);
+  renderWhatsappButton();
   renderHome();
   renderShop();
   renderCart();
@@ -197,9 +198,12 @@ function renderShop() {
 function productCard(product) {
   const out = product.stock <= 0;
   const stockText = out ? "Indisponivel" : "Disponivel";
+  const imageMarkup = product.image
+    ? `<div class="product-img"><img src="${product.image}" alt="${escapeHtml(product.name)}" onerror="this.closest('.product-img').classList.add('placeholder'); this.outerHTML='<img src=&quot;Logo.png&quot; alt=&quot;Omega Software&quot;>'"></div>`
+    : `<div class="product-img placeholder"><img src="Logo.png" alt="Omega Software"></div>`;
   return `
     <article class="product-card">
-      <div class="product-img">${product.image ? `<img src="${product.image}" alt="${escapeHtml(product.name)}">` : `<span>${escapeHtml(product.name)}</span>`}</div>
+      ${imageMarkup}
       <div class="product-body">
         <div class="tags">
           <span class="tag">${escapeHtml(categoryName(product.categoryId))}</span>
@@ -271,6 +275,16 @@ function renderCheckoutSummary() {
     </div>
   `;
   document.getElementById("pixCode").textContent = `VE-PIX-${Math.floor(100000 + Math.random() * 899999)}`;
+}
+
+function renderWhatsappButton() {
+  const link = document.getElementById("floatingWhatsapp");
+  if (!link) return;
+  const phone = onlyDigits(state.settings.whatsapp || "");
+  link.classList.toggle("hidden", !phone);
+  if (phone) {
+    link.href = `https://wa.me/55${phone}?text=${encodeURIComponent(`Ola, gostaria de comprar na ${state.settings.storeName}.`)}`;
+  }
 }
 
 function renderAdmin() {
@@ -558,6 +572,7 @@ async function lookupCep() {
 
 function createOrder(formData) {
   if (!state.cart.length) throw new Error("A cesta esta vazia.");
+  validateCheckout(formData);
   const fulfillment = formData.get("fulfillment");
   const totals = cartTotals(fulfillment);
   if (fulfillment === "delivery" && totals.subtotal < Number(state.settings.minimumDelivery || 0)) {
@@ -569,7 +584,7 @@ function createOrder(formData) {
   }
   const order = {
     id: uid("order"),
-    number: `VE-${String(state.orders.length + 1).padStart(4, "0")}`,
+    number: createOrderNumber(),
     createdAt: new Date().toISOString(),
     customer: {
       name: formData.get("name"),
@@ -620,26 +635,63 @@ function createOrder(formData) {
   return order;
 }
 
+function createOrderNumber() {
+  const date = new Date();
+  const stamp = [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, "0"),
+    String(date.getDate()).padStart(2, "0"),
+  ].join("");
+  return `VE-${stamp}-${String(state.orders.length + 1).padStart(4, "0")}`;
+}
+
+function validateCheckout(formData) {
+  const cpf = onlyDigits(formData.get("cpf"));
+  const phone = onlyDigits(formData.get("phone"));
+  if (cpf.length !== 11) throw new Error("Informe um CPF com 11 digitos.");
+  if (phone.length < 10 || phone.length > 11) throw new Error("Informe um WhatsApp valido.");
+  if (formData.get("fulfillment") === "delivery") {
+    const required = ["cep", "street", "number", "district", "city", "state"];
+    const missing = required.some((field) => !String(formData.get(field) || "").trim());
+    if (missing) throw new Error("Complete os dados de entrega antes de confirmar.");
+  }
+}
+
 function orderSummaryText(order) {
   const lines = [
     `${state.settings.storeName} - Pedido ${order.number}`,
     `Cliente: ${order.customer.name}`,
+    `WhatsApp: ${order.customer.phone}`,
     `Recebimento: ${order.fulfillment === "delivery" ? "Entrega" : "Retirada"}`,
+    order.address ? `Endereco: ${order.address.street}, ${order.address.number} - ${order.address.district}, ${order.address.city}/${order.address.state}` : "",
     ...order.items.map((item) => `${item.quantity}x ${item.name} - ${money.format(item.salePrice * item.quantity)}`),
     `Total: ${money.format(order.total)}`,
     `Pagamento: ${order.paymentMethod.toUpperCase()} (${order.paymentStatus})`,
-  ];
+  ].filter(Boolean);
   return lines.join("\n");
 }
 
 function showSuccess(order) {
+  const whatsappPhone = onlyDigits(state.settings.whatsapp || "");
   document.getElementById("successTitle").textContent = `Pedido ${order.number}`;
   document.getElementById("successDetails").innerHTML = `
-    <div class="summary-row"><span>Cliente</span><strong>${escapeHtml(order.customer.name)}</strong></div>
-    <div class="summary-row"><span>Total</span><strong>${money.format(order.total)}</strong></div>
-    <div class="summary-row"><span>Pagamento</span><strong>${order.paymentMethod.toUpperCase()} simulado</strong></div>
-    <div class="summary-row"><span>Recebimento</span><strong>${order.fulfillment === "delivery" ? "Entrega" : "Retirada"}</strong></div>
+    <div class="receipt-box">
+      <div class="summary-row"><span>Cliente</span><strong>${escapeHtml(order.customer.name)}</strong></div>
+      <div class="summary-row"><span>WhatsApp</span><strong>${escapeHtml(order.customer.phone)}</strong></div>
+      <div class="summary-row"><span>Pagamento</span><strong>${order.paymentMethod.toUpperCase()} simulado</strong></div>
+      <div class="summary-row"><span>Recebimento</span><strong>${order.fulfillment === "delivery" ? "Entrega" : "Retirada"}</strong></div>
+      ${order.address ? `<div class="summary-row"><span>Endereco</span><strong>${escapeHtml(`${order.address.street}, ${order.address.number}`)}</strong></div>` : ""}
+      <div class="receipt-items">
+        ${order.items.map((item) => `<div class="summary-row"><span>${escapeHtml(item.name)} x${item.quantity}</span><strong>${money.format(item.salePrice * item.quantity)}</strong></div>`).join("")}
+      </div>
+      <div class="summary-row total"><span>Total</span><strong>${money.format(order.total)}</strong></div>
+    </div>
   `;
+  const whatsappButton = document.getElementById("sendWhatsappBtn");
+  whatsappButton.classList.toggle("hidden", !whatsappPhone);
+  if (whatsappPhone) {
+    whatsappButton.dataset.whatsappUrl = `https://wa.me/55${whatsappPhone}?text=${encodeURIComponent(lastOrderText)}`;
+  }
   navigate("success");
 }
 
@@ -784,6 +836,14 @@ function bindEvents() {
   document.getElementById("copyOrderBtn").addEventListener("click", async () => {
     await navigator.clipboard?.writeText(lastOrderText);
     toast("Resumo copiado.");
+  });
+  document.getElementById("sendWhatsappBtn").addEventListener("click", (event) => {
+    const url = event.currentTarget.dataset.whatsappUrl;
+    if (url) window.open(url, "_blank", "noopener");
+  });
+
+  document.body.addEventListener("input", (event) => {
+    applyInputMask(event.target);
   });
 
   document.getElementById("checkoutForm").addEventListener("change", (event) => {
@@ -989,6 +1049,37 @@ function escapeHtml(value) {
 
 function escapeAttr(value) {
   return escapeHtml(value).replace(/`/g, "&#096;");
+}
+
+function onlyDigits(value) {
+  return String(value ?? "").replace(/\D/g, "");
+}
+
+function applyInputMask(input) {
+  if (!(input instanceof HTMLInputElement)) return;
+  if (input.name === "cpf") input.value = maskCpf(input.value);
+  if (input.name === "phone" || input.name === "whatsapp") input.value = maskPhone(input.value);
+  if (input.name === "cep") input.value = onlyDigits(input.value).slice(0, 8).replace(/(\d{5})(\d)/, "$1-$2");
+  if (input.name === "cardNumber") input.value = onlyDigits(input.value).slice(0, 16).replace(/(\d{4})(?=\d)/g, "$1 ");
+  if (input.name === "cardExpiry") input.value = onlyDigits(input.value).slice(0, 4).replace(/(\d{2})(\d)/, "$1/$2");
+  if (input.name === "cardCvv") input.value = onlyDigits(input.value).slice(0, 4);
+  if (input.name === "state") input.value = input.value.toUpperCase().replace(/[^A-Z]/g, "").slice(0, 2);
+}
+
+function maskCpf(value) {
+  return onlyDigits(value)
+    .slice(0, 11)
+    .replace(/(\d{3})(\d)/, "$1.$2")
+    .replace(/(\d{3})(\d)/, "$1.$2")
+    .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+}
+
+function maskPhone(value) {
+  const digits = onlyDigits(value).slice(0, 11);
+  if (digits.length <= 10) {
+    return digits.replace(/(\d{2})(\d)/, "($1) $2").replace(/(\d{4})(\d)/, "$1-$2");
+  }
+  return digits.replace(/(\d{2})(\d)/, "($1) $2").replace(/(\d{5})(\d)/, "$1-$2");
 }
 
 bindEvents();
