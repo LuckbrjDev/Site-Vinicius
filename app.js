@@ -219,10 +219,10 @@ function productCard(product) {
         <p>${escapeHtml(product.description || "Produto de conveniencia.")}</p>
         <div class="price-line">
           <div class="price-wrap">
-            <span class="price-label">Preco de venda</span>
-            <span class="price">${money.format(product.salePrice)}</span>
-          </div>
-          <button class="btn slim primary" data-add-cart="${product.id}" ${out ? "disabled" : ""}>Adicionar</button>
+          <span class="price-label">Pedido rapido</span>
+          <span class="price">${money.format(product.salePrice)}</span>
+        </div>
+          <button class="btn slim primary" data-add-cart="${product.id}" ${out ? "disabled" : ""}>Pedir</button>
         </div>
       </div>
     </article>
