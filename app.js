@@ -3,6 +3,7 @@ const STORAGE_KEY = "viniciusExpressState";
 const money = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 const uid = (prefix) => `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`;
 
+// Estado inicial da loja: configuracoes, catalogo, carrinho, vendas e sessao.
 const seedState = {
   settings: {
     storeName: "Vinicius Express",
@@ -103,6 +104,7 @@ let searchTerm = "";
 let lastOrderText = "";
 let activeAdminTab = "dashboard";
 
+// Carrega os dados salvos no navegador e reinicia o login admin por seguranca.
 function loadState() {
   const saved = localStorage.getItem(STORAGE_KEY);
   if (!saved) return structuredClone(seedState);
@@ -118,6 +120,7 @@ function saveState() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
 
+// Atalhos para buscar dados usados em varias telas.
 function categoryName(id) {
   return state.categories.find((cat) => cat.id === id)?.name || "Sem categoria";
 }
@@ -156,6 +159,7 @@ function navigate(nextRoute) {
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
+// Render principal: atualiza todas as telas e salva o estado atual.
 function render() {
   document.querySelectorAll("[data-store-name]").forEach((el) => (el.textContent = state.settings.storeName));
   document.querySelectorAll("[data-cart-count]").forEach((el) => (el.textContent = state.cart.reduce((sum, item) => sum + item.quantity, 0)));
@@ -169,6 +173,7 @@ function render() {
   saveState();
 }
 
+// Loja publica: home, catalogo, cards de produto, cesta e checkout.
 function renderHome() {
   const grid = document.getElementById("featuredGrid");
   const products = sellableProducts().filter((product) => product.featured).slice(0, 4);
@@ -287,6 +292,7 @@ function renderWhatsappButton() {
   }
 }
 
+// ADMIN: alterna entre tela de login e painel completo.
 function renderAdmin() {
   document.getElementById("adminLogin").classList.toggle("hidden", state.session.adminLogged);
   document.getElementById("adminApp").classList.toggle("hidden", !state.session.adminLogged);
@@ -301,12 +307,14 @@ function renderAdmin() {
   applyAdminTabState();
 }
 
+// ADMIN: controla qual aba lateral esta ativa.
 function applyAdminTabState() {
   document.querySelectorAll(".admin-tab").forEach((btn) => btn.classList.toggle("active", btn.dataset.adminTab === activeAdminTab));
   document.querySelectorAll(".admin-panel").forEach((panel) => panel.classList.remove("active"));
   document.getElementById(`${activeAdminTab}Tab`)?.classList.add("active");
 }
 
+// ADMIN: calculos financeiros usados no dashboard e na aba Financeiro.
 function financeStats() {
   const paidOrders = state.orders.filter((order) => order.paymentStatus === "paid");
   const revenue = paidOrders.reduce((sum, order) => sum + order.total, 0);
@@ -317,6 +325,7 @@ function financeStats() {
   return { paidOrders, revenue, productCost, expenses, grossProfit, netProfit };
 }
 
+// ADMIN: resumo rapido com faturamento, lucro, vendas e estoque baixo.
 function renderDashboard() {
   const stats = financeStats();
   const lowStock = state.products.filter((product) => product.stock <= product.minStock).length;
@@ -332,6 +341,7 @@ function renderDashboard() {
   `;
 }
 
+// ADMIN: formulario e tabela para cadastrar, editar e remover produtos.
 function renderProductsAdmin() {
   document.getElementById("productsTab").innerHTML = `
     <div class="section-head compact"><div><p class="eyebrow">Catalogo</p><h1>Produtos</h1></div></div>
@@ -364,6 +374,7 @@ function renderProductsAdmin() {
   `;
 }
 
+// ADMIN: tabela de produtos; os botoes usam data-edit-product e data-delete-product.
 function productsTable() {
   return `
     <table>
@@ -387,6 +398,7 @@ function productsTable() {
   `;
 }
 
+// ADMIN: cadastro de categorias usadas nos filtros e produtos.
 function renderCategoriesAdmin() {
   document.getElementById("categoriesTab").innerHTML = `
     <div class="section-head compact"><div><p class="eyebrow">Filtros</p><h1>Categorias</h1></div></div>
@@ -408,6 +420,7 @@ function renderCategoriesAdmin() {
   `;
 }
 
+// ADMIN: lista de pedidos/vendas feitos pelo checkout.
 function renderOrdersAdmin() {
   document.getElementById("ordersTab").innerHTML = `
     <div class="section-head compact"><div><p class="eyebrow">Pedidos</p><h1>Vendas</h1></div></div>
@@ -415,6 +428,7 @@ function renderOrdersAdmin() {
   `;
 }
 
+// ADMIN: tabela reutilizada no dashboard e na aba Vendas.
 function ordersTable(orders) {
   if (!orders.length) return `<p class="hint">Nenhuma venda registrada.</p>`;
   return `
@@ -439,6 +453,7 @@ function ordersTable(orders) {
   `;
 }
 
+// ADMIN: entrada/saida manual de estoque e historico de movimentos.
 function renderStockAdmin() {
   document.getElementById("stockTab").innerHTML = `
     <div class="section-head compact"><div><p class="eyebrow">Inventario</p><h1>Estoque</h1></div></div>
@@ -465,6 +480,7 @@ function renderStockAdmin() {
   `;
 }
 
+// ADMIN: receitas, custos, despesas e lucro estimado.
 function renderFinanceAdmin() {
   const stats = financeStats();
   document.getElementById("financeTab").innerHTML = `
@@ -492,6 +508,7 @@ function renderFinanceAdmin() {
   `;
 }
 
+// ADMIN: configuracoes da loja. A senha so muda se o campo "Nova senha admin" for preenchido.
 function renderSettingsAdmin() {
   document.getElementById("settingsTab").innerHTML = `
     <div class="section-head compact"><div><p class="eyebrow">Loja</p><h1>Configuracoes</h1></div></div>
@@ -704,6 +721,7 @@ function readImageAsDataUrl(file) {
   });
 }
 
+// Eventos da pagina: um unico listener de clique roteia botoes pelo atributo data-*.
 function bindEvents() {
   document.body.addEventListener("click", (event) => {
     const routeBtn = event.target.closest("[data-route]");
@@ -869,6 +887,7 @@ function bindEvents() {
     }
   });
 
+  // ADMIN: login compara a senha digitada com a senha salva nas configuracoes.
   document.getElementById("adminLoginForm").addEventListener("submit", (event) => {
     event.preventDefault();
     if (new FormData(event.target).get("password") === state.settings.adminPassword) {
@@ -879,11 +898,13 @@ function bindEvents() {
     }
   });
 
+  // ADMIN: sair limpa apenas a sessao atual; os dados da loja continuam salvos.
   document.getElementById("logoutBtn").addEventListener("click", () => {
     state.session.adminLogged = false;
     render();
   });
 
+  // ADMIN: troca de status direto na tabela de vendas.
   document.body.addEventListener("change", (event) => {
     if (event.target.matches("[data-order-status]")) {
       const order = state.orders.find((entry) => entry.id === event.target.dataset.orderStatus);
@@ -896,6 +917,7 @@ function bindEvents() {
   });
 }
 
+// ADMIN: salva produto novo ou atualiza produto existente.
 async function saveProduct(form) {
   if (!form) return;
   const data = new FormData(form);
@@ -927,6 +949,7 @@ async function saveProduct(form) {
   render();
 }
 
+// ADMIN: joga os dados do produto selecionado para dentro do formulario.
 function fillProductForm(id) {
   const product = productById(id);
   const form = document.getElementById("productForm");
@@ -945,12 +968,14 @@ function fillProductForm(id) {
   form.elements.adultOnly.checked = product.adultOnly;
 }
 
+// ADMIN: remove o produto do catalogo e tambem da cesta, se estiver la.
 function deleteProductById(id) {
   state.products = state.products.filter((product) => product.id !== id);
   state.cart = state.cart.filter((item) => item.productId !== id);
   render();
 }
 
+// ADMIN: cria ou edita categoria.
 function saveCategory(form) {
   if (!form) return;
   const data = new FormData(form);
@@ -965,6 +990,7 @@ function saveCategory(form) {
   render();
 }
 
+// ADMIN: preenche o formulario de categoria para edicao.
 function fillCategoryForm(id) {
   const category = state.categories.find((cat) => cat.id === id);
   const form = document.getElementById("categoryForm");
@@ -973,12 +999,14 @@ function fillCategoryForm(id) {
   form.name.value = category.name;
 }
 
+// ADMIN: bloqueia a exclusao de categoria que ainda possui produtos vinculados.
 function deleteCategoryById(id) {
   if (state.products.some((product) => product.categoryId === id)) return toast("Categoria possui produtos vinculados.");
   state.categories = state.categories.filter((cat) => cat.id !== id);
   render();
 }
 
+// ADMIN: registra entrada ou saida manual no estoque.
 function saveStockMove(form) {
   if (!form) return;
   const data = new FormData(form);
@@ -993,6 +1021,7 @@ function saveStockMove(form) {
   render();
 }
 
+// ADMIN: adiciona despesa para aparecer no financeiro.
 function saveExpense(form) {
   if (!form) return;
   const data = new FormData(form);
@@ -1007,6 +1036,7 @@ function saveExpense(form) {
   render();
 }
 
+// ADMIN: salva dados gerais da loja; nao mostra a senha em nenhum texto da pagina.
 function saveSettings(form) {
   if (!form) return;
   const data = new FormData(form);
@@ -1020,6 +1050,7 @@ function saveSettings(form) {
   render();
 }
 
+// ADMIN: atualiza pagamento/status da venda.
 function markOrderPaid(id) {
   const order = state.orders.find((entry) => entry.id === id);
   if (!order) return;
@@ -1028,6 +1059,7 @@ function markOrderPaid(id) {
   render();
 }
 
+// ADMIN: cancela pedido e devolve os itens ao estoque.
 function cancelOrder(id) {
   const order = state.orders.find((entry) => entry.id === id);
   if (!order || order.status === "cancelado") return;
@@ -1043,6 +1075,7 @@ function cancelOrder(id) {
   render();
 }
 
+// Utilitarios de seguranca e formatacao para valores digitados pelo usuario.
 function escapeHtml(value) {
   return String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[char]));
 }

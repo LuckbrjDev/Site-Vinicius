@@ -479,6 +479,7 @@ label { display: grid; gap: 6px; color: var(--muted); font-size: 13px; font-weig
   font-weight: 900;
 }
 
+/* Telas finais e login admin. */
 .success-panel, .login-panel {
   max-width: 720px;
   margin: 40px auto;
@@ -503,6 +504,7 @@ label { display: grid; gap: 6px; color: var(--muted); font-size: 13px; font-weig
 .login-form { display: grid; grid-template-columns: 1fr auto; gap: 10px; margin-top: 18px; }
 .hint { color: var(--muted); font-size: 13px; }
 
+/* ADMIN: layout geral do painel, sidebar e abas. */
 .admin-shell {
   display: grid;
   grid-template-columns: 220px 1fr;
@@ -533,6 +535,7 @@ label { display: grid; gap: 6px; color: var(--muted); font-size: 13px; font-weig
 .admin-content { min-width: 0; }
 .admin-panel { display: none; }
 .admin-panel.active { display: grid; gap: 16px; }
+/* ADMIN: cards de indicadores do dashboard/financeiro. */
 .kpi-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -546,6 +549,7 @@ label { display: grid; gap: 6px; color: var(--muted); font-size: 13px; font-weig
 }
 .kpi span { color: var(--muted); font-size: 12px; text-transform: uppercase; font-weight: 800; }
 .kpi strong { display: block; margin-top: 6px; font-size: 26px; }
+/* ADMIN: grade padrao com formulario de um lado e tabela do outro. */
 .admin-grid { display: grid; grid-template-columns: 360px 1fr; gap: 16px; align-items: start; }
 .stack { display: grid; gap: 10px; }
 .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
