@@ -199,8 +199,8 @@ function productCard(product) {
   const out = product.stock <= 0;
   const stockText = out ? "Indisponivel" : "Disponivel";
   const imageMarkup = product.image
-    ? `<div class="product-img"><img src="${product.image}" alt="${escapeHtml(product.name)}" onerror="this.closest('.product-img').classList.add('placeholder'); this.outerHTML='<img src=&quot;Logo.png&quot; alt=&quot;Omega Software&quot;>'"></div>`
-    : `<div class="product-img placeholder"><img src="Logo.png" alt="Omega Software"></div>`;
+    ? `<div class="product-img"><img src="${product.image}" alt="${escapeHtml(product.name)}" onerror="this.closest('.product-img').classList.add('placeholder'); this.outerHTML='<img src=&quot;vinicius-express-logo.png&quot; alt=&quot;Vinicius Express&quot;>'"></div>`
+    : `<div class="product-img placeholder"><img src="vinicius-express-logo.png" alt="Vinicius Express"></div>`;
   return `
     <article class="product-card">
       ${imageMarkup}
