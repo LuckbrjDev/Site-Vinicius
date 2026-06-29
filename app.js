@@ -6,7 +6,7 @@ const uid = (prefix) => `${prefix}_${Date.now().toString(36)}_${Math.random().to
 // Estado inicial da loja: configuracoes, catalogo, carrinho, vendas e sessao.
 const seedState = {
   settings: {
-    storeName: "Vinicius Express",
+    storeName: "Vn Express",
     adminPassword: "admin123",
     deliveryFee: 5,
     minimumDelivery: 20,
