@@ -130,6 +130,7 @@ function productById(id) {
 }
 
 function cartTotals(fulfillment = getCheckoutFulfillment()) {
+  // Calcula subtotal, taxa de entrega e total sempre a partir do carrinho atual.
   const subtotal = state.cart.reduce((sum, item) => {
     const product = productById(item.productId);
     return sum + (product ? product.salePrice * item.quantity : 0);
@@ -143,6 +144,7 @@ function getCheckoutFulfillment() {
 }
 
 function toast(message) {
+  // Mensagem curta de feedback para acoes do cliente e do admin.
   const el = document.getElementById("toast");
   el.textContent = message;
   el.classList.add("show");
@@ -151,6 +153,7 @@ function toast(message) {
 }
 
 function navigate(nextRoute) {
+  // Troca a tela ativa sem recarregar a pagina.
   route = nextRoute;
   document.querySelectorAll(".view").forEach((view) => view.classList.remove("active"));
   document.getElementById(`${route}View`).classList.add("active");
@@ -181,10 +184,12 @@ function renderHome() {
 }
 
 function sellableProducts() {
+  // Apenas produtos ativos aparecem na loja publica.
   return state.products.filter((product) => product.active && product.status !== "hidden");
 }
 
 function renderShop() {
+  // Monta filtros e grade do catalogo com busca por texto.
   const filters = document.getElementById("categoryFilters");
   const categoryButtons = [{ id: "all", name: "Todos" }, ...state.categories]
     .map((cat) => `<button class="filter-chip ${selectedCategory === cat.id ? "active" : ""}" data-category="${cat.id}">${cat.name}</button>`)
@@ -201,6 +206,7 @@ function renderShop() {
 }
 
 function productCard(product) {
+  // Card usado tanto na home quanto no catalogo.
   const out = product.stock <= 0;
   const stockText = out ? "Indisponivel" : "Disponivel";
   const imageMarkup = product.image
@@ -230,6 +236,7 @@ function productCard(product) {
 }
 
 function renderCart() {
+  // Atualiza lista da cesta e resumo financeiro lateral.
   const list = document.getElementById("cartItems");
   if (!state.cart.length) {
     list.innerHTML = emptyState("Sua cesta esta vazia.");
@@ -265,6 +272,7 @@ function renderCart() {
 }
 
 function renderCheckoutSummary() {
+  // Resumo do checkout fica sincronizado com a forma de recebimento.
   const holder = document.getElementById("checkoutSummary");
   if (!holder) return;
   const totals = cartTotals();
@@ -283,6 +291,7 @@ function renderCheckoutSummary() {
 }
 
 function renderWhatsappButton() {
+  // Exibe o atalho flutuante somente quando o WhatsApp da loja foi configurado.
   const link = document.getElementById("floatingWhatsapp");
   if (!link) return;
   const phone = onlyDigits(state.settings.whatsapp || "");
@@ -564,6 +573,7 @@ function removeCart(productId) {
 }
 
 async function lookupCep() {
+  // Consulta externa usada apenas para preencher endereco no checkout.
   const cepInput = document.getElementById("cepInput");
   const message = document.getElementById("cepMessage");
   const cep = cepInput.value.replace(/\D/g, "");
@@ -588,6 +598,7 @@ async function lookupCep() {
 }
 
 function createOrder(formData) {
+  // Cria o pedido, baixa estoque e prepara o resumo para WhatsApp/recibo.
   if (!state.cart.length) throw new Error("A cesta esta vazia.");
   validateCheckout(formData);
   const fulfillment = formData.get("fulfillment");
@@ -653,6 +664,7 @@ function createOrder(formData) {
 }
 
 function createOrderNumber() {
+  // Numeracao simples por data e quantidade de pedidos salvos localmente.
   const date = new Date();
   const stamp = [
     date.getFullYear(),
@@ -663,6 +675,7 @@ function createOrderNumber() {
 }
 
 function validateCheckout(formData) {
+  // Validacoes minimas antes de registrar a venda.
   const cpf = onlyDigits(formData.get("cpf"));
   const phone = onlyDigits(formData.get("phone"));
   if (cpf.length !== 11) throw new Error("Informe um CPF com 11 digitos.");
@@ -675,6 +688,7 @@ function validateCheckout(formData) {
 }
 
 function orderSummaryText(order) {
+  // Texto usado no botao de copiar e no envio para WhatsApp.
   const lines = [
     `${state.settings.storeName} - Pedido ${order.number}`,
     `Cliente: ${order.customer.name}`,
@@ -689,6 +703,7 @@ function orderSummaryText(order) {
 }
 
 function showSuccess(order) {
+  // Tela final do pedido com recibo resumido e acoes de pos-venda.
   const whatsappPhone = onlyDigits(state.settings.whatsapp || "");
   document.getElementById("successTitle").textContent = `Pedido ${order.number}`;
   document.getElementById("successDetails").innerHTML = `
@@ -713,6 +728,7 @@ function showSuccess(order) {
 }
 
 function readImageAsDataUrl(file) {
+  // Converte imagem enviada no admin para salvar junto ao estado local.
   return new Promise((resolve) => {
     if (!file) return resolve("");
     const reader = new FileReader();
