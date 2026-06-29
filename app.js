@@ -87,11 +87,15 @@ const seedState = {
       status: "active",
     },
   ],
+  customers: [],
   cart: [],
   orders: [],
+  payments: [],
   expenses: [
     { id: "exp_1", description: "Embalagens", amount: 35, status: "open", dueDate: new Date().toISOString().slice(0, 10) },
   ],
+  financialMovements: [],
+  adjustments: [],
   stockLog: [],
   history: [],
   session: { adminLogged: false, adultConfirmed: false },
@@ -107,17 +111,139 @@ let activeAdminTab = "dashboard";
 // Carrega os dados salvos no navegador e reinicia o login admin por seguranca.
 function loadState() {
   const saved = localStorage.getItem(STORAGE_KEY);
-  if (!saved) return structuredClone(seedState);
+  if (!saved) return normalizeState(seedState);
   try {
     const parsed = JSON.parse(saved);
-    return { ...structuredClone(seedState), ...parsed, session: { adminLogged: false, adultConfirmed: parsed.session?.adultConfirmed || false } };
+    return normalizeState(parsed);
   } catch {
-    return structuredClone(seedState);
+    return normalizeState(seedState);
   }
 }
 
 function saveState() {
+  refreshBusinessData(state);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+// Normaliza dados antigos e garante que novas colecoes existam depois de updates.
+function normalizeState(savedState) {
+  const base = structuredClone(seedState);
+  const normalized = {
+    ...base,
+    ...savedState,
+    settings: { ...base.settings, ...(savedState.settings || {}) },
+    session: { adminLogged: false, adultConfirmed: savedState.session?.adultConfirmed || false },
+  };
+  ["categories", "products", "customers", "cart", "orders", "payments", "expenses", "financialMovements", "adjustments", "stockLog", "history"].forEach((key) => {
+    if (!Array.isArray(normalized[key])) normalized[key] = [];
+  });
+  refreshBusinessData(normalized);
+  return normalized;
+}
+
+// Reconstroi dados derivados que alimentarao clientes, financeiro e relatorios.
+function refreshBusinessData(targetState = state) {
+  rebuildCustomersFromOrders(targetState);
+  rebuildPaymentsFromOrders(targetState);
+  rebuildFinancialMovements(targetState);
+}
+
+function customerIdFromData(customer = {}) {
+  const cpf = onlyDigits(customer.cpf);
+  const phone = onlyDigits(customer.phone);
+  if (cpf) return `cust_cpf_${cpf}`;
+  if (phone) return `cust_phone_${phone}`;
+  return `cust_${String(customer.name || "cliente").trim().toLowerCase().replace(/[^a-z0-9]+/g, "_") || "sem_dados"}`;
+}
+
+function isRevenueOrder(order) {
+  return order?.paymentStatus === "paid" && order?.status !== "cancelado";
+}
+
+function orderProductCost(order) {
+  return (order.items || []).reduce((sum, item) => sum + Number(item.costPrice || 0) * Number(item.quantity || 0), 0);
+}
+
+function rebuildCustomersFromOrders(targetState = state) {
+  const previous = new Map((targetState.customers || []).map((customer) => [customer.id, customer]));
+  const customers = new Map();
+
+  (targetState.orders || []).forEach((order) => {
+    const id = order.customerId || customerIdFromData(order.customer);
+    order.customerId = id;
+    const old = previous.get(id) || {};
+    const current = customers.get(id) || {
+      ...old,
+      id,
+      name: order.customer?.name || old.name || "Cliente",
+      cpf: onlyDigits(order.customer?.cpf || old.cpf || ""),
+      phone: onlyDigits(order.customer?.phone || old.phone || ""),
+      email: order.customer?.email || old.email || "",
+      orderIds: [],
+      orderCount: 0,
+      totalSpent: 0,
+      averageTicket: 0,
+      firstOrderAt: old.firstOrderAt || order.createdAt,
+      lastOrderAt: old.lastOrderAt || order.createdAt,
+    };
+
+    current.name = order.customer?.name || current.name;
+    current.cpf = onlyDigits(order.customer?.cpf || current.cpf);
+    current.phone = onlyDigits(order.customer?.phone || current.phone);
+    current.email = order.customer?.email || current.email;
+    current.orderIds.push(order.id);
+    const orderDates = [current.firstOrderAt, current.lastOrderAt, order.createdAt].filter(Boolean).sort();
+    current.firstOrderAt = orderDates[0] || "";
+    current.lastOrderAt = orderDates[orderDates.length - 1] || "";
+    if (isRevenueOrder(order)) {
+      current.orderCount += 1;
+      current.totalSpent += Number(order.total || 0);
+    }
+    current.averageTicket = current.orderCount ? current.totalSpent / current.orderCount : 0;
+    customers.set(id, current);
+  });
+
+  targetState.customers = Array.from(customers.values()).sort((a, b) => String(b.lastOrderAt || "").localeCompare(String(a.lastOrderAt || "")));
+}
+
+function rebuildPaymentsFromOrders(targetState = state) {
+  targetState.payments = (targetState.orders || []).map((order) => ({
+    id: `pay_${order.id}`,
+    orderId: order.id,
+    customerId: order.customerId || customerIdFromData(order.customer),
+    method: order.paymentMethod,
+    status: order.paymentStatus,
+    amount: Number(order.total || 0),
+    transactionId: order.transactionId || "",
+    createdAt: order.createdAt,
+    paidAt: order.paymentStatus === "paid" ? order.createdAt : "",
+  }));
+}
+
+function rebuildFinancialMovements(targetState = state) {
+  const saleMovements = (targetState.orders || []).flatMap((order) => {
+    const base = {
+      orderId: order.id,
+      customerId: order.customerId || customerIdFromData(order.customer),
+      date: order.createdAt,
+      status: order.status,
+    };
+    return [
+      { id: `fin_sale_${order.id}`, type: "sale", direction: "in", description: `Venda ${order.number}`, amount: Number(order.total || 0), ...base },
+      { id: `fin_cost_${order.id}`, type: "product_cost", direction: "out", description: `Custo dos produtos ${order.number}`, amount: orderProductCost(order), ...base },
+    ];
+  });
+  const expenseMovements = (targetState.expenses || []).map((expense) => ({
+    id: `fin_expense_${expense.id}`,
+    type: "expense",
+    direction: "out",
+    description: expense.description,
+    amount: Number(expense.amount || 0),
+    status: expense.status,
+    dueDate: expense.dueDate || "",
+    date: expense.dueDate || new Date().toISOString().slice(0, 10),
+  }));
+  targetState.financialMovements = [...saleMovements, ...expenseMovements];
 }
 
 // Atalhos para buscar dados usados em varias telas.
@@ -603,6 +729,13 @@ function createOrder(formData) {
   validateCheckout(formData);
   const fulfillment = formData.get("fulfillment");
   const totals = cartTotals(fulfillment);
+  const customer = {
+    name: formData.get("name"),
+    cpf: formData.get("cpf"),
+    phone: formData.get("phone"),
+    email: formData.get("email"),
+    adultConfirmed: formData.get("adultConfirm") === "on",
+  };
   if (fulfillment === "delivery" && totals.subtotal < Number(state.settings.minimumDelivery || 0)) {
     throw new Error(`Pedido minimo para entrega: ${money.format(Number(state.settings.minimumDelivery || 0))}.`);
   }
@@ -614,13 +747,8 @@ function createOrder(formData) {
     id: uid("order"),
     number: createOrderNumber(),
     createdAt: new Date().toISOString(),
-    customer: {
-      name: formData.get("name"),
-      cpf: formData.get("cpf"),
-      phone: formData.get("phone"),
-      email: formData.get("email"),
-      adultConfirmed: formData.get("adultConfirm") === "on",
-    },
+    customerId: customerIdFromData(customer),
+    customer,
     fulfillment,
     address: fulfillment === "delivery" ? {
       cep: formData.get("cep"),
@@ -658,6 +786,7 @@ function createOrder(formData) {
     state.stockLog.push({ id: uid("stock"), date: new Date().toISOString(), productName: product.name, type: "saida", quantity: item.quantity, reason: `Venda ${order.number}` });
   });
   state.orders.unshift(order);
+  refreshBusinessData(state);
   state.cart = [];
   lastOrderText = orderSummaryText(order);
   return order;
@@ -844,6 +973,7 @@ function bindEvents() {
     const deleteExpense = event.target.closest("[data-delete-expense]");
     if (deleteExpense) {
       state.expenses = state.expenses.filter((expense) => expense.id !== deleteExpense.dataset.deleteExpense);
+      refreshBusinessData(state);
       render();
       return;
     }
@@ -927,6 +1057,7 @@ function bindEvents() {
       if (order) {
         order.status = event.target.value;
         if (event.target.value === "pago") order.paymentStatus = "paid";
+        refreshBusinessData(state);
         render();
       }
     }
@@ -1049,6 +1180,7 @@ function saveExpense(form) {
     status: data.get("status"),
   });
   form.reset();
+  refreshBusinessData(state);
   render();
 }
 
@@ -1072,6 +1204,7 @@ function markOrderPaid(id) {
   if (!order) return;
   order.paymentStatus = "paid";
   order.status = "pago";
+  refreshBusinessData(state);
   render();
 }
 
@@ -1081,6 +1214,7 @@ function cancelOrder(id) {
   if (!order || order.status === "cancelado") return;
   order.status = "cancelado";
   order.paymentStatus = "cancelado";
+  state.adjustments.push({ id: uid("adj"), type: "cancelamento", orderId: order.id, amount: order.total, date: new Date().toISOString(), reason: `Cancelamento ${order.number}` });
   order.items.forEach((item) => {
     const product = productById(item.productId);
     if (product) {
@@ -1088,6 +1222,7 @@ function cancelOrder(id) {
       state.stockLog.push({ id: uid("stock"), date: new Date().toISOString(), productName: product.name, type: "entrada", quantity: item.quantity, reason: `Cancelamento ${order.number}` });
     }
   });
+  refreshBusinessData(state);
   render();
 }
 
