@@ -35,8 +35,8 @@ img { max-width: 100%; }
 }
 .brand { display: inline-flex; align-items: center; gap: 10px; color: #fff; font-weight: 900; text-decoration: none; white-space: nowrap; }
 .brand.small { margin-bottom: 18px; font-size: 14px; }
-.brand-mark { display: grid; width: 46px; height: 40px; place-items: center; overflow: hidden; border-radius: 8px; background: #020406; box-shadow: 0 0 0 1px rgba(40,224,189,.22); }
-.brand-mark img { width: 100%; height: 100%; object-fit: contain; }
+.brand-mark { display: grid; width: 58px; height: 50px; place-items: center; overflow: hidden; border-radius: 8px; background: #020406; box-shadow: 0 0 0 1px rgba(40,224,189,.22); }
+.brand-mark img { width: 100%; height: 100%; object-fit: contain; padding: 2px; }
 .main-nav { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px; }
 .nav-link, .admin-tab {
   border: 1px solid var(--line);
@@ -180,7 +180,7 @@ img { max-width: 100%; }
 .product-img { display: grid; place-items: center; padding: 12px; background: linear-gradient(135deg, rgba(255,77,92,.8), rgba(17,25,35,.96)); overflow: hidden; }
 .product-img img { width: 100%; height: 100%; object-fit: cover; }
 .product-img.placeholder { background: linear-gradient(135deg, #020406, rgba(40,224,189,.32)); }
-.product-img.placeholder img { width: min(140px, 70%); height: auto; object-fit: contain; }
+.product-img.placeholder img { width: min(170px, 78%); height: auto; object-fit: contain; }
 .product-body { display: grid; grid-template-rows: auto auto 1fr auto; gap: 9px; padding: 14px; min-width: 0; }
 .product-body h3 { margin: 0; font-size: 18px; line-height: 1.14; overflow-wrap: anywhere; }
 .product-body p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
@@ -256,11 +256,11 @@ th { color: var(--muted); font-size: 12px; text-transform: uppercase; }
 
 /* Rodape, WhatsApp flutuante, bloqueio +18 e toast de feedback. */
 .site-footer { padding: 24px; text-align: center; background: #020406; color: var(--muted); border-top: 1px solid rgba(40,224,189,.14); }
-.footer-logo { width: 86px; border-radius: 8px; }
+.footer-logo { width: min(132px, 42vw); border-radius: 8px; }
 .floating-whatsapp { position: fixed; right: 18px; bottom: 78px; z-index: 80; padding: 12px 15px; border-radius: 8px; background: var(--neon); color: #04100d; font-weight: 900; text-decoration: none; }
 .age-gate { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 18px; background: rgba(7,11,16,.92); }
 .age-panel { max-width: 520px; }
-.age-logo { width: 128px; border-radius: 8px; }
+.age-logo { width: min(260px, 72vw); border-radius: 8px; background: #020406; }
 .toast { position: fixed; right: 18px; bottom: 18px; z-index: 120; max-width: 360px; padding: 12px 14px; border-radius: 8px; color: #04100d; background: var(--neon); opacity: 0; transform: translateY(12px); transition: .2s ease; font-weight: 900; }
 .toast.show { opacity: 1; transform: translateY(0); }
 
@@ -276,6 +276,7 @@ th { color: var(--muted); font-size: 12px; text-transform: uppercase; }
 /* Mobile: reduz densidade visual e deixa botoes/grades em coluna unica. */
 @media (max-width: 640px) {
   .topbar { grid-template-columns: 1fr; }
+  .brand-mark { width: 52px; height: 46px; }
   .main-nav { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .view { padding: 12px; }
   .dispatch-card { min-height: auto; padding: 22px; }
